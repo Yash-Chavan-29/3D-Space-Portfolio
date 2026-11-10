@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yash P Chavan | Full Stack Engineer & 3D Interactive Portfolio</title>
+  <meta name="description" content="Portfolio of Yash P Chavan - Full Stack Web Developer & Software Engineer building deterministic orbital physics, vector RAG backends, and real-time distributed systems.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            obsidian: '#050811',
+            void: '#03060d',
+            cockpit: '#0b1120',
+            cyanGlow: '#38bdf8',
+            emeraldGlow: '#34d399',
+            purpleGlow: '#a855f7',
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'spin-slow': 'spin 20s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050811;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+
+    /* Glow utilities */
+    .glow-cyan {
+      box-shadow: 0 0 35px -5px rgba(56, 189, 248, 0.35);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 35px -5px rgba(52, 211, 153, 0.35);
+    }
+    .glow-purple {
+      box-shadow: 0 0 35px -5px rgba(168, 85, 247, 0.35);
+    }
+    .text-glow {
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    }
+
+    /* Glassmorphic Cards */
+    .glass-card {
+      background: rgba(11, 17, 32, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -10px rgba(56, 189, 248, 0.2);
+    }
+
+    /* 3D Canvas fixed background */
+    #webgl-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Perspective 3D container */
+    .perspective-container {
+      perspective: 1000px;
+    }
+
+    /* Dynamic Tilt Card */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* Noise overlay */
+    .bg-noise {
+      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+  </style>
+</head>
+
+<body class="bg-obsidian text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-black overflow-x-hidden relative">
+
+  <!-- 3D Three.js WebGL Canvas Background -->
+  <canvas id="webgl-bg"></canvas>
+
+  <!-- Navigation Bar -->
+  <header class="fixed top-0 left-0 right-0 z-50 flex justify-center py-4 px-4 sm:px-8 pointer-events-none">
+    <nav class="pointer-events-auto flex items-center justify-between gap-6 px-6 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-cyan-500/20 shadow-lg shadow-black/50 text-sm">
+      <a href="#hero" class="flex items-center gap-2.5 font-bold tracking-tight text-white hover:text-cyan-400 transition-colors">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <span class="font-mono text-base font-extrabold tracking-wider bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">YASH.DEV</span>
+      </a>
+      
+      <div class="hidden md:flex items-center gap-6 font-medium text-slate-300">
+        <a href="#about" class="hover:text-cyan-400 transition-colors">About</a>
+        <a href="#projects" class="hover:text-cyan-400 transition-colors">Projects</a>
+        <a href="#skills" class="hover:text-cyan-400 transition-colors">Skills</a>
+        <a href="#terminal" class="hover:text-cyan-400 transition-colors">Terminal</a>
+        <a href="#resume" class="hover:text-cyan-400 transition-colors">Resume</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#contact" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs tracking-wider uppercase hover:opacity-90 transition-opacity shadow-md shadow-cyan-500/20">
+          Get in Touch
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="min-h-[85vh] flex flex-col justify-center items-center text-center py-12">
+      <!-- Status Pill -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/80 border border-cyan-500/30 text-xs font-mono text-cyan-300 mb-8 backdrop-blur-sm animate-pulse-slow">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        Hack-A-Sol 5.0 (IIIT Naya Raipur) Ready • Available for SDE Roles
+      </div>
+
+      <!-- Main Headline with 3D Depth effect -->
+      <h1 class="text-4xl sm:text-6xl md:text-8xl font-black tracking-tight text-white mb-6 uppercase">
+        <span class="inline-block bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Yash P</span>
+        <span class="block bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent text-glow mt-1">Chavan</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="max-w-2xl text-lg sm:text-xl text-slate-300 font-light leading-relaxed mb-10">
+        <span class="text-white font-medium">Full Stack Software Engineer & Systems Architect</span> at KLE Tech University. 
+        Crafting deterministic orbital mechanics, low-latency Vector RAG pipelines, and real-time distributed WebSockets.
+      </p>
+
+      <!-- CTA Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+        <a href="#projects" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white font-bold text-sm tracking-wide uppercase hover:shadow-lg hover:shadow-cyan-500/30 transition-all transform hover:-translate-y-0.5">
+          Explore 3D Projects
+        </a>
+        <a href="#resume" class="px-8 py-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-200 font-bold text-sm tracking-wide uppercase hover:bg-slate-700/80 hover:border-cyan-500/40 transition-all transform hover:-translate-y-0.5 backdrop-blur-sm">
+          View Resume PDF
+        </a>
+        <a href="#terminal" class="px-6 py-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 text-purple-300 font-mono text-sm hover:border-purple-400 hover:text-white transition-all">
+          $ launch_terminal_
+        </a>
+      </div>
+
+      <!-- Telemetry Metric Badges (HUD) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl">
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-3xl font-extrabold text-cyan-400 font-mono">4+</div>
+          <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Full-Stack Projects</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-3xl font-extrabold text-emerald-400 font-mono">&lt;50ms</div>
+          <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">WebSocket Latency</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-3xl font-extrabold text-indigo-400 font-mono">96%</div>
+          <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">ATS Screening Score</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-3xl font-extrabold text-purple-400 font-mono">36h</div>
+          <div class="text-xs uppercase tracking-wider text-slate-400 mt-1">Hackathon Sprint Ready</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about" class="py-20">
+      <div class="glass-card rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-center gap-10">
+          <!-- Profile Avatar with Cybernetic Halo -->
+          <div class="relative group flex-shrink-0">
+            <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 blur opacity-70 group-hover:opacity-100 transition duration-1000 animate-spin-slow"></div>
+            <div class="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden border-2 border-slate-700 bg-slate-900 p-1">
+              <img src="data:image/png;base64,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" alt="Yash P Chavan" class="w-full h-full object-cover rounded-full">
+            </div>
+            <div class="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-emerald-400 border-2 border-slate-900"></div>
+          </div>
+
+          <!-- Bio & Credentials -->
+          <div class="flex-grow text-left">
+            <div class="inline-block px-3 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-semibold uppercase tracking-wider mb-3">
+              Candidate Profile
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">
+              Yash P Chavan • Engineering High-Speed Logic & Modern Interfaces
+            </h2>
+            <p class="text-slate-300 leading-relaxed text-sm sm:text-base mb-4">
+              I am a Bachelor of Computer Applications candidate at <strong>KLE Technological University</strong>, Hubballi (Batch of 2027, USN: <code class="text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded">01FE24BCA030</code>). 
+              My focus lies at the intersection of mathematical computing, AI retrieval backends, and responsive WebGL design.
+            </p>
+            <p class="text-slate-400 text-sm leading-relaxed mb-6">
+              Whether architecting Keplerian orbital estimators in Python, fine-tuning high-dimensional vector search with ChromaDB and Google Gemini, or deploying low-latency WebSocket architectures for live convoy tracking, I construct systems optimized for scale and reliability.
+            </p>
+
+            <div class="flex flex-wrap gap-4 text-xs font-mono text-slate-300">
+              <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="text-cyan-400 font-bold">📍 Location:</span> Hubballi-Dharwad, Karnataka
+              </div>
+              <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="text-emerald-400 font-bold">🎓 Degree:</span> B.C.A. (Expected July 2027)
+              </div>
+              <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="text-purple-400 font-bold">⚡ Focus:</span> Full-Stack • AI/RAG • Systems
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS SHOWCASE SECTION (3D Bento Grid) -->
+    <section id="projects" class="py-20">
+      <div class="text-center mb-16">
+        <h2 class="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Featured Work</h2>
+        <p class="text-3xl sm:text-5xl font-black text-white tracking-tight">Mission Architecture & Systems</p>
+        <p class="text-slate-400 mt-3 max-w-xl mx-auto text-sm">Interactive production projects built with modern frameworks, mathematical algorithms, and microservice backends.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- 1. AegisCosmos -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between group hover:border-cyan-400/60 relative overflow-hidden">
+          <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all"></div>
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                Space Physics & 3D Simulation
+              </span>
+              <span class="text-slate-500 text-xs font-mono">01 // FLAGSHIP</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+              AegisCosmos — Satellite Orbit & Collision Predictor
+            </h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+              Interactive orbital mechanics simulation engine built with Python and NumPy. Formulates Keplerian two-body problem equations and SGP4 propagation to compute and detect simulated satellite close encounters in real-time 3D coordinate space.
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Python</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">NumPy</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Streamlit 3D</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Plotly</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-cyan-300">Keplerian Math</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <button onclick="openSimulationModal('aegis')" class="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>▶ Run Live 3D Orbit Demo</span>
+            </button>
+            <a href="https://github.com/Yash-Chavan-29" target="_blank" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
+              <span>View Source ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Persona Chat AI -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between group hover:border-emerald-400/60 relative overflow-hidden">
+          <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Vector RAG & GenAI Agent
+              </span>
+              <span class="text-slate-500 text-xs font-mono">02 // ACTIVE BACKEND</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-emerald-300 transition-colors">
+              Persona Chat AI — WhatsApp-Style RAG Microservice
+            </h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+              FastAPI intelligence service that parses real WhatsApp conversation logs into ChromaDB vector embeddings. Leverages dynamic few-shot retrieval and Google Gemini API to mirror custom persona slang, syntax, and conversational style with sub-250ms response latency.
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">FastAPI</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">ChromaDB</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Google Gemini API</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Docker</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-emerald-300">Vector Search</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <button onclick="openSimulationModal('persona')" class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>▶ Test Persona Chat Demo</span>
+            </button>
+            <a href="https://github.com/Yash-Chavan-29/persona-chat-ai" target="_blank" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
+              <span>GitHub Repo ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. Convoy Coordinator -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between group hover:border-indigo-400/60 relative overflow-hidden">
+          <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                Real-Time WebSockets & Telemetry
+              </span>
+              <span class="text-slate-500 text-xs font-mono">03 // DISTRIBUTED</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+              Convoy Coordinator — Live Transit Fleet Mesh
+            </h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+              Event-driven transit monitoring application enabling multi-vehicle convoys to stream live coordinates with sub-50ms WebSocket latency. Features Mapbox GL clustering, automatic route recalculations, geo-fenced safety deviation alerts, and a shared expense ledger.
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">React.js</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Socket.io</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Mapbox GL</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Node.js</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-indigo-300">Capacitor Android</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <button onclick="openSimulationModal('convoy')" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>▶ View Telemetry Radar</span>
+            </button>
+            <a href="https://github.com/Yash-Chavan-29" target="_blank" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
+              <span>View Source ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 4. EventHub -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between group hover:border-purple-400/60 relative overflow-hidden">
+          <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                Full-Stack MERN & Security
+              </span>
+              <span class="text-slate-500 text-xs font-mono">04 // ENTERPRISE WEB</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
+              EventHub — Campus Management & QR Verification
+            </h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+              Complete university event ecosystem automating registrations, ticketing, and administrative reporting. Integrates cryptographic QR-code attendee verification that accelerates on-site gate check-ins to under 2 seconds while eliminating ticket fraud.
+            </p>
+            <div class="flex flex-wrap gap-2 mb-6">
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">React.js</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">Node.js / Express</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">MongoDB</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-slate-300">JWT Security</span>
+              <span class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono text-purple-300">QR Engine</span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <button onclick="openSimulationModal('eventhub')" class="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>▶ Test QR Ticket Engine</span>
+            </button>
+            <a href="https://github.com/Yash-Chavan-29" target="_blank" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
+              <span>View Source ↗</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TECHNICAL SKILLS MATRIX (BENTO GRID) -->
+    <section id="skills" class="py-20">
+      <div class="text-center mb-16">
+        <h2 class="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Capabilities Matrix</h2>
+        <p class="text-3xl sm:text-5xl font-black text-white tracking-tight">Core Engineering Stack</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+        <!-- Languages -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono font-bold mb-4">
+            &lt;/&gt;
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Languages</h3>
+          <p class="text-xs text-slate-400 mb-4">Core languages used for systems, backends, and UI.</p>
+          <div class="space-y-2 text-xs font-mono">
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Python</span>
+              <span class="text-cyan-400 font-bold">Expert</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">JavaScript (ES6+)</span>
+              <span class="text-cyan-400 font-bold">Advanced</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">SQL (Postgres/MySQL)</span>
+              <span class="text-cyan-400 font-bold">Proficient</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-slate-200">HTML5 / CSS3</span>
+              <span class="text-cyan-400 font-bold">Advanced</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI & Vector Engines -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono font-bold mb-4">
+            AI
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">AI & Vector RAG</h3>
+          <p class="text-xs text-slate-400 mb-4">Modern GenAI pipelines and vector indexing.</p>
+          <div class="space-y-2 text-xs font-mono">
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Google Gemini API</span>
+              <span class="text-emerald-400 font-bold">Production</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">ChromaDB Vector Store</span>
+              <span class="text-emerald-400 font-bold">Advanced</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Few-Shot Prompting</span>
+              <span class="text-emerald-400 font-bold">Mastery</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-slate-200">NumPy / Scientific Math</span>
+              <span class="text-emerald-400 font-bold">Advanced</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Stack Web -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono font-bold mb-4">
+            FS
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Full Stack Web</h3>
+          <p class="text-xs text-slate-400 mb-4">Reactive clients and scalable microservices.</p>
+          <div class="space-y-2 text-xs font-mono">
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">React.js & Vite</span>
+              <span class="text-indigo-400 font-bold">Advanced</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">FastAPI & Node.js</span>
+              <span class="text-indigo-400 font-bold">Advanced</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Tailwind CSS</span>
+              <span class="text-indigo-400 font-bold">Expert</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-slate-200">Express & REST APIs</span>
+              <span class="text-indigo-400 font-bold">Advanced</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Systems & DevOps -->
+        <div class="glass-card rounded-2xl p-6">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono font-bold mb-4">
+            OPS
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">Real-Time & DevOps</h3>
+          <p class="text-xs text-slate-400 mb-4">WebSockets, maps, containers, and pipelines.</p>
+          <div class="space-y-2 text-xs font-mono">
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">WebSockets / Socket.io</span>
+              <span class="text-purple-400 font-bold">&lt;50ms Sync</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Mapbox GL SDK</span>
+              <span class="text-purple-400 font-bold">Advanced</span>
+            </div>
+            <div class="flex justify-between items-center py-1 border-b border-slate-800">
+              <span class="text-slate-200">Docker Containers</span>
+              <span class="text-purple-400 font-bold">Configured</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="text-slate-200">Git / GitHub CI/CD</span>
+              <span class="text-purple-400 font-bold">Daily Workflow</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- INTERACTIVE TERMINAL HUD -->
+    <section id="terminal" class="py-20">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest">Interactive Command Shell</span>
+          <h2 class="text-3xl font-black text-white mt-1">Yash Shell v2.4 (Active)</h2>
+        </div>
+
+        <div class="rounded-2xl bg-black/90 border border-slate-800 shadow-2xl overflow-hidden font-mono text-xs sm:text-sm">
+          <!-- Terminal Titlebar -->
+          <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+              <span class="ml-2 text-slate-400 text-xs">guest@yash-chavan-os:~</span>
+            </div>
+            <div class="text-slate-500 text-xs">BASH / WebGL Mesh Active</div>
+          </div>
+
+          <!-- Terminal Output Screen -->
+          <div id="term-body" class="p-5 h-72 overflow-y-auto space-y-2.5 text-slate-300">
+            <div class="text-cyan-400">Welcome to Yash P Chavan's Developer Environment (v2.4.0)</div>
+            <div class="text-slate-500">Type <span class="text-white font-bold">'help'</span> for list of commands, or try <span class="text-cyan-300">'projects'</span>, <span class="text-emerald-300">'skills'</span>, <span class="text-indigo-300">'hackathon'</span>, <span class="text-purple-300">'clear'</span>.</div>
+            <div class="text-slate-400">─────────────────────────────────────────────────────────────</div>
+          </div>
+
+          <!-- Terminal Input Row -->
+          <div class="flex items-center px-4 py-3 bg-slate-950 border-t border-slate-900">
+            <span class="text-emerald-400 mr-2 font-bold font-mono">yash@hubballi:~$</span>
+            <input type="text" id="term-input" placeholder="type a command (e.g. 'skills')..." class="flex-grow bg-transparent text-cyan-300 outline-none font-mono text-sm placeholder-slate-600">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESUME DOWNLOAD & VIEWER SECTION -->
+    <section id="resume" class="py-20 text-center">
+      <div class="glass-card max-w-4xl mx-auto rounded-3xl p-8 sm:p-12 relative overflow-hidden">
+        <div class="inline-block px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono font-semibold uppercase tracking-wider mb-4">
+          ATS Score: 96/100 • 1-Page Verified
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">Official Curriculum Vitae</h2>
+        <p class="text-slate-300 text-sm max-w-xl mx-auto mb-8">
+          Optimized for applicant tracking systems and competitive hackathons with zero print margin defects, verified credentials, and high-impact project metrics.
+        </p>
+
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="../01_Resume/Yash_Chavan_Resume.pdf" target="_blank" download class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-sm tracking-wide uppercase hover:shadow-lg hover:shadow-cyan-500/25 transition-all">
+            Download PDF Resume ⇩
+          </a>
+          <a href="../01_Resume/Yash_Chavan_Resume.html" target="_blank" class="px-8 py-3.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 font-bold text-sm tracking-wide uppercase hover:bg-slate-700 transition-all">
+            Open HTML Version ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="py-20">
+      <div class="max-w-2xl mx-auto glass-card rounded-3xl p-8 sm:p-12">
+        <div class="text-center mb-8">
+          <h2 class="text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">Initiate Contact</h2>
+          <p class="text-3xl font-black text-white">Let's Build Something Extraordinary</p>
+          <p class="text-slate-400 text-xs mt-2">Actively open to software engineering internships, hackathon teammates, and technical collaborations.</p>
+        </div>
+
+        <form onsubmit="handleContactSubmit(event)" class="space-y-4 font-mono text-xs sm:text-sm">
+          <div>
+            <label class="block text-slate-300 mb-1.5 uppercase tracking-wider">Your Name</label>
+            <input type="text" required placeholder="Dr. Jane Smith / Recruiter" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1.5 uppercase tracking-wider">Email Address</label>
+            <input type="email" required placeholder="contact@company.com" class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1.5 uppercase tracking-wider">Message Payload</label>
+            <textarea rows="4" required placeholder="Discussing SDE opportunity / Hack-A-Sol collaboration..." class="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-800 text-white focus:outline-none focus:border-cyan-400 transition-colors"></textarea>
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white font-bold uppercase tracking-wider hover:opacity-90 transition-opacity font-sans text-sm">
+            Transmit Message 🚀
+          </button>
+        </form>
+
+        <div id="contact-success" class="hidden mt-4 p-4 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-center font-mono text-xs">
+          Message transmitted successfully! Yash will respond to your coordinates within 24 hours.
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-12 border-t border-slate-900 text-center text-xs font-mono text-slate-500">
+      <div class="flex items-center justify-center gap-6 mb-4 text-slate-400">
+        <a href="https://github.com/Yash-Chavan-29" target="_blank" class="hover:text-cyan-400 transition-colors">GitHub</a>
+        <span>•</span>
+        <a href="https://linkedin.com/in/yashchavan" target="_blank" class="hover:text-cyan-400 transition-colors">LinkedIn</a>
+        <span>•</span>
+        <a href="mailto:chavan.yash429@gmail.com" class="hover:text-cyan-400 transition-colors">chavan.yash429@gmail.com</a>
+      </div>
+      <p>© 2026 Yash P Chavan. Department of Computer Applications, KLE Tech University.</p>
+      <p class="mt-1 text-slate-600">Built with WebGL 3D, Three.js & Tailwind CSS.</p>
+    </footer>
+
+  </main>
+
+  <!-- INTERACTIVE SIMULATION MODAL -->
+  <div id="sim-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+    <div class="glass-card max-w-2xl w-full rounded-3xl p-6 sm:p-8 relative border border-cyan-500/40 shadow-2xl">
+      <button onclick="closeSimulationModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white font-mono text-xl">✕</button>
+      
+      <div id="modal-content">
+        <!-- Dynamically injected simulation UI -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js Interactive 3D Background Engine & Interactive Scripts -->
+  <script>
+    // -----------------------------------------------------------------
+    // 1. Three.js Interactive 3D Wireframe Planetoid & Keplerian Particle Mesh
+    // -----------------------------------------------------------------
+    const canvas = document.getElementById('webgl-bg');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050811, 0.0018);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 35;
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Central Wireframe Sphere (Celestial Core)
+    const sphereGeo = new THREE.IcosahedronGeometry(12, 3);
+    const sphereMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.18
+    });
+    const centralSphere = new THREE.Mesh(sphereGeo, sphereMat);
+    scene.add(centralSphere);
+
+    // Inner Glowing Core
+    const innerGeo = new THREE.IcosahedronGeometry(7, 2);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0x818cf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.28
+    });
+    const innerSphere = new THREE.Mesh(innerGeo, innerMat);
+    scene.add(innerSphere);
+
+    // Orbiting Satellite Rings / Keplerian Particle Swarm
+    const particlesCount = 1400;
+    const posArray = new Float32Array(particlesCount * 3);
+    const colorsArray = new Float32Array(particlesCount * 3);
+
+    const color1 = new THREE.Color(0x38bdf8); // Cyan
+    const color2 = new THREE.Color(0xa855f7); // Purple
+    const color3 = new THREE.Color(0x34d399); // Emerald
+
+    for (let i = 0; i < particlesCount * 3; i += 3) {
+      const radius = 16 + Math.random() * 24;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI * 0.65;
+
+      posArray[i] = radius * Math.cos(theta) * Math.cos(phi);
+      posArray[i + 1] = radius * Math.sin(phi);
+      posArray[i + 2] = radius * Math.sin(theta) * Math.cos(phi);
+
+      const mixedColor = Math.random() > 0.5 ? color1 : (Math.random() > 0.5 ? color2 : color3);
+      colorsArray[i] = mixedColor.r;
+      colorsArray[i + 1] = mixedColor.g;
+      colorsArray[i + 2] = mixedColor.b;
+    }
+
+    const particlesGeo = new THREE.BufferGeometry();
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    particlesGeo.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+
+    const particlesMat = new THREE.PointsMaterial({
+      size: 0.22,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    const particleSystem = new THREE.Points(particlesGeo, particlesMat);
+    scene.add(particleSystem);
+
+    // Mouse interactive camera tilt
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.001;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.001;
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Animation Loop
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      // Slow orbital rotations
+      centralSphere.rotation.y = elapsedTime * 0.06;
+      centralSphere.rotation.x = elapsedTime * 0.03;
+
+      innerSphere.rotation.y = -elapsedTime * 0.09;
+      innerSphere.rotation.z = elapsedTime * 0.04;
+
+      particleSystem.rotation.y = elapsedTime * 0.04;
+      particleSystem.rotation.x = Math.sin(elapsedTime * 0.1) * 0.1;
+
+      // Mouse lerping
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+
+      camera.position.x = targetX * 18;
+      camera.position.y = -targetY * 18;
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // -----------------------------------------------------------------
+    // 2. Interactive Terminal Engine
+    // -----------------------------------------------------------------
+    const termInput = document.getElementById('term-input');
+    const termBody = document.getElementById('term-body');
+
+    const commands = {
+      'help': 'Available commands: projects, skills, education, hackathon, contact, clear, resume, whoami',
+      'whoami': 'Yash P Chavan | Full Stack Web Developer & Software Engineer (USN: 01FE24BCA030)',
+      'education': 'KLE Technological University, Hubballi | B.C.A. (Expected July 2027) | Relevant: DSA, DBMS, Web, OS',
+      'hackathon': 'Hack-A-Sol 5.0 (IIIT Naya Raipur) | 36-Hour National Sprint | Tracks: AI/ML, Full-Stack, Systems',
+      'skills': 'Languages: Python, JavaScript, SQL\nAI: Gemini API, ChromaDB RAG, Prompt Engineering, NumPy\nFull-Stack: React, Vite, Node, Express, FastAPI, Tailwind\nDevOps: Docker, Socket.io, Git, Mapbox GL',
+      'projects': '1. AegisCosmos (3D Keplerian Orbit Visualizer)\n2. Persona Chat AI (FastAPI ChromaDB RAG)\n3. Convoy Coordinator (Real-time Socket.io Fleet Tracker)\n4. EventHub (MERN Campus QR Management)',
+      'resume': 'Yash_Chavan_Resume.pdf is available in the 01_Resume directory (ATS Score: 96/100).',
+      'contact': 'Email: chavan.yash429@gmail.com | GitHub: github.com/Yash-Chavan-29',
+    };
+
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const rawCmd = termInput.value.trim().toLowerCase();
+        termInput.value = '';
+
+        const cmdLine = document.createElement('div');
+        cmdLine.innerHTML = `<span class="text-emerald-400 font-bold">yash@hubballi:~$</span> <span class="text-white">${rawCmd}</span>`;
+        termBody.appendChild(cmdLine);
+
+        if (rawCmd === 'clear') {
+          termBody.innerHTML = '';
+        } else if (commands[rawCmd]) {
+          const res = document.createElement('div');
+          res.className = 'text-cyan-300 whitespace-pre-line pl-2';
+          res.textContent = commands[rawCmd];
+          termBody.appendChild(res);
+        } else if (rawCmd !== '') {
+          const err = document.createElement('div');
+          err.className = 'text-red-400 pl-2';
+          err.textContent = `Command not recognized: '${rawCmd}'. Type 'help' for available commands.`;
+          termBody.appendChild(err);
+        }
+
+        termBody.scrollTop = termBody.scrollHeight;
+      }
+    });
+
+    // -----------------------------------------------------------------
+    // 3. Interactive Project Simulation Modals
+    // -----------------------------------------------------------------
+    const simModal = document.getElementById('sim-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    function openSimulationModal(type) {
+      simModal.classList.remove('hidden');
+
+      if (type === 'aegis') {
+        modalContent.innerHTML = `
+          <h3 class="text-xl font-bold text-cyan-400 mb-2">AegisCosmos • 3D Orbital Trajectory Engine</h3>
+          <p class="text-slate-300 text-xs mb-4">Simulating 2-body Keplerian orbital calculation with proximity conjunction alert threshold.</p>
+          <div class="bg-black/90 p-4 rounded-xl border border-slate-800 text-xs font-mono space-y-2 mb-4">
+            <div class="text-slate-400">[ORBIT-ENGINE] Initializing SGP4 Propagator...</div>
+            <div class="text-cyan-300">Target Alpha: Semi-Major Axis = 7100 km | Inclination = 51.6°</div>
+            <div class="text-indigo-300">Target Beta:  Semi-Major Axis = 7098 km | Inclination = 51.5°</div>
+            <div class="text-emerald-400 font-bold">Relative Velocity: 7.42 km/s | Calculated Miss Distance: 412 m</div>
+            <div class="p-2 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-300">
+              ⚠️ CONJUNCTION ALERT: Collision probability index exceeds 1.2e-4. Evasion burn delta-V recommended: 0.85 m/s.
+            </div>
+          </div>
+          <button onclick="closeSimulationModal()" class="w-full py-2 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-xs">Close Simulation</button>
+        `;
+      } else if (type === 'persona') {
+        modalContent.innerHTML = `
+          <h3 class="text-xl font-bold text-emerald-400 mb-2">Persona Chat AI • Vector RAG Sandbox</h3>
+          <p class="text-slate-300 text-xs mb-4">FastAPI Few-Shot inference utilizing ChromaDB semantic retrieval & Gemini API.</p>
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs font-mono space-y-3 mb-4">
+            <div class="text-slate-400">[QUERY] "Bro did you finish the assignment?"</div>
+            <div class="text-cyan-400">[VECTOR-LOOKUP] Top 3 cosine matches retrieved from ChromaDB (Score: 0.94)</div>
+            <div class="text-emerald-300 bg-slate-950 p-2.5 rounded border border-emerald-500/20">
+              "Nah man still debugging the WebSocket route. Give me 10 mins and I'll push the commit to main."
+            </div>
+            <div class="text-slate-500 text-[10px]">Inference Latency: 218ms | Model: Gemini 2.5 Flash | Embeddings: 768-dim</div>
+          </div>
+          <button onclick="closeSimulationModal()" class="w-full py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs">Close Simulation</button>
+        `;
+      } else if (type === 'convoy') {
+        modalContent.innerHTML = `
+          <h3 class="text-xl font-bold text-indigo-400 mb-2">Convoy Coordinator • Live Telemetry Radar</h3>
+          <p class="text-slate-300 text-xs mb-4">Sub-50ms bidirectional WebSocket telemetry synchronizer with Mapbox GL.</p>
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs font-mono space-y-2 mb-4">
+            <div class="flex justify-between text-slate-300 border-b border-slate-800 pb-1">
+              <span>Vehicle #1 (Lead):</span> <span class="text-emerald-400">15.3647° N, 75.1240° E [64 km/h]</span>
+            </div>
+            <div class="flex justify-between text-slate-300 border-b border-slate-800 pb-1">
+              <span>Vehicle #2 (Chaser):</span> <span class="text-cyan-400">15.3638° N, 75.1235° E [62 km/h]</span>
+            </div>
+            <div class="text-indigo-300 font-bold">Inter-Convoy Spacing: 110 meters • WebSocket Ping: 24ms</div>
+            <div class="text-emerald-400">Status: All units inside designated green safety corridor.</div>
+          </div>
+          <button onclick="closeSimulationModal()" class="w-full py-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold text-xs">Close Simulation</button>
+        `;
+      } else if (type === 'eventhub') {
+        modalContent.innerHTML = `
+          <h3 class="text-xl font-bold text-purple-400 mb-2">EventHub • Cryptographic QR Ticketing</h3>
+          <p class="text-slate-300 text-xs mb-4">Full-stack attendee registration with HMAC-signed rapid QR validation.</p>
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs font-mono space-y-3 mb-4 text-center">
+            <div class="inline-block p-3 bg-white rounded-xl text-black font-black text-sm tracking-widest">
+              [ █▀▀█ █ █ █▀▀█ ]<br>
+              [ █▄▄█ █ █ █▄▄█ ]<br>
+              [ █ █ █▀▀█ █ █ ]
+            </div>
+            <div class="text-purple-300 font-bold">TICKET TOKEN: EVTHUB-KLE-2026-X94B</div>
+            <div class="text-emerald-400 text-xs">Status: VALIDATED (Gate Pass Granted in 1.4s)</div>
+          </div>
+          <button onclick="closeSimulationModal()" class="w-full py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold text-xs">Close Simulation</button>
+        `;
+      }
+    }
+
+    function closeSimulationModal() {
+      simModal.classList.add('hidden');
+    }
+
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      document.getElementById('contact-success').classList.remove('hidden');
+      e.target.reset();
+    }
+  </script>
+</body>
+</html>
